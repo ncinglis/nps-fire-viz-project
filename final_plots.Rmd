@@ -1,0 +1,205 @@
+---
+title: ""
+author: ""
+date: ""
+output: html_document
+css: C:/ncstate/715/finalproject/nps-fire-viz/markdown_CSS.css
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+#Visualizing Fire Regime Trends in Everglades National Park and Big Cypress National Preserve
+_Nikki Inglis_  
+_GIS715 April 2019_    
+\  
+\    
+\    
+\   
+\  
+\  
+\  
+\  
+
+     
+###**Explore the spatial nature of the Everglades fire regime by time of year** 
+#### Use the brush tool by clicking on the color below. On the bubble chart, click and drag the time frame you want to explore.  
+```{r setup, include=FALSE}
+library(ggplot2)
+library(ggthemes)
+library(scales)
+library(maps)
+library(mapproj)
+library(sp)
+library(rgdal)
+library(spatialEco)
+library(tidyverse)
+library(sf)
+library(plotly)
+library(Cairo)
+library(ggspatial)
+library(leaflet)
+
+fires<-readOGR("C:/ncstate/NPS/southflorida/allfires/all_fires_cost.shp")
+
+
+everWFMI<-read.csv("C:/ncstate/NPS/southflorida/adddates/ever_dates.csv", stringsAsFactors = F)
+bicyWFMI<-read.csv("C:/ncstate/NPS/southflorida/adddates/BICY_dates.csv", stringsAsFactors = F)
+
+WFMI<-rbind(everWFMI, bicyWFMI)
+
+
+fires<-merge(fires, WFMI, by.x = "FireID", by.y = "FireId", all.x= T)
+
+
+fires$StartDate<-as.character(fires$StartDate)
+fires$ContrDate<-as.character(fires$ContrDate)
+fires$StartDate<-as.Date(fires$StartDate, format="%Y%m%d", origin="1970-01-01")
+fires$ContrDate<-as.Date(fires$ContrDate, format="%Y%m%d", origin="1970-01-01")
+fires$duration<-difftime(fires$ContrDate, fires$StartDate, units="days")
+fires$plot_date<-as.Date(fires$StartDate, format = "%Y%m%d")
+fires$plot_date<-as.Date(format(fires$plot_date,"2017-%m-%d"))
+
+fires<-subset(fires, GISAcres>2000)
+fires<-spTransform(fires, '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+firessf<-st_as_sf(fires)
+pal<-c()
+```
+
+```{r cars, echo=F, warning=F, message=F, fig.width=16, fig.height=16}
+ library(crosstalk)
+
+share<-SharedData$new(firessf)
+
+bscols(
+  ggplotly(
+    ggplot(share) + 
+    geom_sf(aes(fill=NEWCAT, group=1, text=paste('Name:', IncidentNa, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
+    xlab("") +
+    ylab("") +
+    theme(plot.background = element_rect(fill='gray20'), 
+          panel.background = element_rect(fill='gray20'), 
+          axis.text = element_blank(),
+          panel.grid.major = element_line(colour = "gray20"),   
+          panel.grid.minor = element_blank(),
+          legend.position='none') +
+    scale_fill_manual(values=c("#56B4E9", "#ffff00", "#FF5733", "#d397fc")), tooltip="text") %>%
+    highlight(dynamic = TRUE, persistent = TRUE, color=c('#ff00ff','#fce897','#e98756', '#33ffc2')),
+  ggplotly(ggplot(share, aes(y=FIRE_YEAR)) +
+    geom_hline(yintercept = seq(1992, 2015, by = 1), color = "gray", size = 0.04) +
+    scale_size_area(max_size = 15, guide = FALSE) +
+    scale_x_date(date_breaks = "months", date_labels = "%b") +
+    scale_y_reverse(limits = c(2015,1992), breaks = c(2010,2005,2000,1995)) +
+    xlab("") +
+    ylab("") +
+    theme(plot.background = element_rect(fill='gray20'), 
+          panel.background = element_rect(fill='gray20'), 
+          axis.text.y = element_text(colour='gray98', size=16),
+          axis.text.x = element_text(colour='gray98', size=10),
+          panel.grid.major = element_blank(),   
+          panel.grid.minor = element_blank(),
+          panel.grid.major.y = element_line(size=1.2, color="gray"),
+          axis.ticks.x = element_line(colour='gray98'),
+          legend.text = element_text(colour='gray98'),
+          legend.title = element_blank(),
+          legend.background = element_rect(fill='gray20')) +
+    geom_point(aes(size = GISAcres*2, x = plot_date, color = NEWCAT, group=1, text=paste('Name:', IncidentNa, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
+    scale_color_manual(values=c("#56B4E9", "#ffff00", "#FF5733", "#d397fc")), tooltip="text") %>%
+    highlight("plotly_selected", persistent = FALSE, color=c('#ff00ff','#fce897','#e98756', '#33ffc2')),
+    widths=c(6,6))
+```
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+
+###**When are most prescribed fires conducted? What month has the most concentration of wildfires?**
+####Hover over a color on either chart below to explore how each fire type is distributed throughout history and across the year
+```{r, echo=F, warning=F, message=F, fig.width=14, fig.height=6, fig.align='center'}
+setwd("C:/ncstate/NPS/southflorida/")
+
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(ggthemes)
+library(scales)
+library(maps)
+library(mapproj)
+library(sp)
+library(rgdal)
+library(ggmap)
+
+everWFMI<-read.csv("adddates/ever_dates.csv", stringsAsFactors = F)
+bicyWFMI<-read.csv("adddates/BICY_dates.csv", stringsAsFactors = F)
+allfires<-read.csv("allfires/allfires_vizproject_nodates.csv", stringsAsFactors = F)
+WFMI<-rbind(everWFMI, bicyWFMI)
+fires_ns<-merge(allfires, WFMI, by.x = "FireID", by.y = "FireId", all.x= T)
+cost<-read.csv("2010-17/2010-2017_code_ID_combo.csv")
+fires_ns<-merge(fires_ns, cost, by.x = "FireID", by.y = "fireID", all.x=T)
+fires_ns$StartDate<-as.character(fires_ns$StartDate)
+fires_ns$ContrDate<-as.character(fires_ns$ContrDate)
+fires_ns$StartDate<-as.Date(fires_ns$StartDate, format="%Y%m%d", origin="1970-01-01")
+fires_ns$ContrDate<-as.Date(fires_ns$ContrDate, format="%Y%m%d", origin="1970-01-01")
+fires_ns$duration<-difftime(fires_ns$ContrDate, fires_ns$StartDate, units="days")
+fires_ns$plot_date<-as.Date(fires_ns$StartDate, format = "%Y%m%d")
+fires_ns$plot_date<-as.Date(format(fires_ns$plot_date,"2017-%m-%d"))
+
+n <- highlight_key(fires_ns, ~NEWCAT)
+p1 <- 
+  ggplot(n, aes(x=plot_date, fill = NEWCAT)) + 
+  geom_density(alpha=0.7, color=NA) +
+  scale_x_date(date_breaks = "months", date_labels = "%b") +
+  scale_y_continuous(position = "right") +
+  theme(plot.background = element_rect(fill='gray20'), 
+        panel.background = element_rect(fill='gray20'), 
+        axis.text.y = element_text(colour='gray98', size=16),
+        axis.text.x = element_text(colour='gray98', size=10),
+        panel.grid.major = element_blank(),   
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_line(size=1.2, color="gray"),
+        axis.ticks.x = element_line(colour='gray98'),
+        plot.margin=unit(c(0,0,0,2), 'cm')) +
+    xlab("") +
+     ylab("") +
+    scale_fill_manual(values=c("#56B4E9", "#ffff00", "#FF5733", "#d397fc"))
+
+  
+
+p2<-ggplot(n, aes(y=FIRE_YEAR)) +
+  geom_hline(yintercept = seq(1992, 2015, by = 1), color = "gray", size = 0.04) +
+  scale_size_area(max_size = 15, guide = FALSE) +
+  scale_x_date(date_breaks = "months", date_labels = "%b") +
+  scale_y_reverse(limits = c(2015,1992), breaks = c(2010,2005,2000,1995)) +
+  xlab("") +
+  ylab("") +
+  theme(plot.background = element_rect(fill='gray20'), 
+        panel.background = element_rect(fill='gray20'), 
+        axis.text.y = element_text(colour='gray98', size=16),
+        axis.text.x = element_text(colour='gray98', size=10),
+        panel.grid.major = element_blank(),   
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_line(size=1.2, color="gray"),
+        axis.ticks.x = element_line(colour='gray98'),
+        legend.text = element_text(colour='gray98'),
+        legend.title = element_blank(),
+        legend.background = element_rect(fill='gray20')) +
+  geom_point(aes(size = GISAcres*2, x = plot_date, color = NEWCAT, group=1, text=paste('Name:', IncidentNa, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
+  scale_color_manual(values=c("#56B4E9", "#ffff00", "#FF5733", "#d397fc"))
+
+p1g<-ggplotly(p1, tooltip=FALSE)
+p2g<-ggplotly(p2, tooltip='text')
+
+subplot(p2g, p1g, which_layout = 2) %>% highlight("plotly_hover")
+```
+
+
+
+
