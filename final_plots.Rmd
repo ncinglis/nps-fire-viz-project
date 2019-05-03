@@ -64,7 +64,9 @@ fires$ContrDate<-as.Date(fires$ContrDate, format="%Y%m%d", origin="1970-01-01")
 fires$duration<-difftime(fires$ContrDate, fires$StartDate, units="days")
 fires$plot_date<-as.Date(fires$StartDate, format = "%Y%m%d")
 fires$plot_date<-as.Date(format(fires$plot_date,"2017-%m-%d"))
-
+fires$NEWCAT<-case_when(fires$FireCause == 'Natural' ~ "Natural wildfire",
+                        fires$FireTypePr == 48 ~ "Prescribed Fire",
+                        fires$FireTypePr != 48 & fires$FireCause == 'Human' ~ "Human-caused wildfire")
 fires<-subset(fires, GISAcres>2000)
 fires<-spTransform(fires, '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
 firessf<-st_as_sf(fires)
@@ -88,7 +90,7 @@ bscols(
           panel.grid.major = element_line(colour = "gray20"),   
           panel.grid.minor = element_blank(),
           legend.position='none') +
-    scale_fill_manual(values=c("#56B4E9", "#ffff00", "#FF5733", "#d397fc")), tooltip="text") %>%
+    scale_fill_manual(values=c("#FF5733", "#ffff00", "#56B4E9")), tooltip="text") %>%
     highlight(dynamic = TRUE, persistent = TRUE, color=c('#ff00ff','#fce897','#e98756', '#33ffc2')),
   ggplotly(ggplot(share, aes(y=FIRE_YEAR)) +
     geom_hline(yintercept = seq(1992, 2015, by = 1), color = "gray", size = 0.04) +
@@ -151,7 +153,9 @@ fires_ns$ContrDate<-as.Date(fires_ns$ContrDate, format="%Y%m%d", origin="1970-01
 fires_ns$duration<-difftime(fires_ns$ContrDate, fires_ns$StartDate, units="days")
 fires_ns$plot_date<-as.Date(fires_ns$StartDate, format = "%Y%m%d")
 fires_ns$plot_date<-as.Date(format(fires_ns$plot_date,"2017-%m-%d"))
-
+fires_ns$NEWCAT<-case_when(fires_ns$FireCause == 'Natural' ~ "Natural wildfire",
+                        fires_ns$FireTypePr == 48 ~ "Prescribed Fire",
+                        fires_ns$FireTypePr != 48 & fires_ns$FireCause == 'Human' ~ "Human-caused wildfire")
 n <- highlight_key(fires_ns, ~NEWCAT)
 p1 <- 
   ggplot(n, aes(x=plot_date, fill = NEWCAT)) + 
@@ -169,7 +173,7 @@ p1 <-
         plot.margin=unit(c(0,0,0,2), 'cm')) +
     xlab("") +
      ylab("") +
-    scale_fill_manual(values=c("#56B4E9", "#ffff00", "#FF5733", "#d397fc"))
+    scale_fill_manual(values=c("#FF5733", "#ffff00", "#56B4E9"))
 
   
 
@@ -192,12 +196,12 @@ p2<-ggplot(n, aes(y=FIRE_YEAR)) +
         legend.title = element_blank(),
         legend.background = element_rect(fill='gray20')) +
   geom_point(aes(size = GISAcres*2, x = plot_date, color = NEWCAT, group=1, text=paste('Name:', IncidentNa, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
-  scale_color_manual(values=c("#56B4E9", "#ffff00", "#FF5733", "#d397fc"))
+  scale_color_manual(values=c("#FF5733", "#ffff00", "#56B4E9"))
 
 p1g<-ggplotly(p1, tooltip=FALSE)
 p2g<-ggplotly(p2, tooltip='text')
 
-subplot(p2g, p1g, which_layout = 2) %>% highlight("plotly_hover")
+subplot(p2g, p1g, which_layout = 2) %>% hide_legend() %>% highlight("plotly_hover")
 ```
 
 
