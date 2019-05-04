@@ -47,15 +47,10 @@ library(leaflet)
 
 fires<-readOGR("C:/ncstate/NPS/southflorida/allfires/all_fires_cost.shp")
 
-
 everWFMI<-read.csv("C:/ncstate/NPS/southflorida/adddates/ever_dates.csv", stringsAsFactors = F)
 bicyWFMI<-read.csv("C:/ncstate/NPS/southflorida/adddates/BICY_dates.csv", stringsAsFactors = F)
-
 WFMI<-rbind(everWFMI, bicyWFMI)
-
-
 fires<-merge(fires, WFMI, by.x = "FireID", by.y = "FireId", all.x= T)
-
 
 fires$StartDate<-as.character(fires$StartDate)
 fires$ContrDate<-as.character(fires$ContrDate)
@@ -73,7 +68,7 @@ firessf<-st_as_sf(fires)
 pal<-c()
 ```
 
-```{r cars, echo=F, warning=F, message=F, fig.width=16, fig.height=16}
+```{r first, echo=F, warning=F, message=F, fig.width=16, fig.height=16}
  library(crosstalk)
 
 share<-SharedData$new(firessf)
@@ -90,7 +85,7 @@ bscols(
           panel.grid.major = element_line(colour = "gray20"),   
           panel.grid.minor = element_blank(),
           legend.position='none') +
-    scale_fill_manual(values=c("#FF5733", "#ffff00", "#56B4E9")), tooltip="text") %>%
+    scale_fill_manual(values=c("#FF5733", "#ffff00","#56B4E9")), tooltip="text") %>%
     highlight(dynamic = TRUE, persistent = TRUE, color=c('#ff00ff','#fce897','#e98756', '#33ffc2')),
   ggplotly(ggplot(share, aes(y=FIRE_YEAR)) +
     geom_hline(yintercept = seq(1992, 2015, by = 1), color = "gray", size = 0.04) +
@@ -111,7 +106,7 @@ bscols(
           legend.title = element_blank(),
           legend.background = element_rect(fill='gray20')) +
     geom_point(aes(size = GISAcres*2, x = plot_date, color = NEWCAT, group=1, text=paste('Name:', IncidentNa, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
-    scale_color_manual(values=c("#56B4E9", "#ffff00", "#FF5733", "#d397fc")), tooltip="text") %>%
+    scale_color_manual(values=c("#FF5733", "#ffff00","#56B4E9")), tooltip="text") %>%
     highlight("plotly_selected", persistent = FALSE, color=c('#ff00ff','#fce897','#e98756', '#33ffc2')),
     widths=c(6,6))
 ```
@@ -124,8 +119,8 @@ bscols(
 
 
 ###**When are most prescribed fires conducted? What month has the most concentration of wildfires?**
-####Hover over a color on either chart below to explore how each fire type is distributed throughout history and across the year
-```{r, echo=F, warning=F, message=F, fig.width=14, fig.height=6, fig.align='center'}
+####Hover over a color on either chart below to explore how each fire type is distributed throughout history and across the year. The second chart is a density plot of fire occurences over the calendar year. 
+```{r second, echo=F, warning=F, message=F, fig.width=14, fig.height=12, fig.align='center'}
 setwd("C:/ncstate/NPS/southflorida/")
 
 library(dplyr)
@@ -170,10 +165,10 @@ p1 <-
         panel.grid.minor = element_blank(),
         panel.grid.major.y = element_line(size=1.2, color="gray"),
         axis.ticks.x = element_line(colour='gray98'),
-        plot.margin=unit(c(0,0,0,2), 'cm')) +
+        plot.margin=unit(c(0,2,0,0), 'cm')) +
     xlab("") +
-     ylab("") +
-    scale_fill_manual(values=c("#FF5733", "#ffff00", "#56B4E9"))
+     ylab("Density of fire occurences") +
+    scale_fill_manual(values=c("#FF5733", "#ffff00","#56B4E9"))
 
   
 
@@ -194,14 +189,15 @@ p2<-ggplot(n, aes(y=FIRE_YEAR)) +
         axis.ticks.x = element_line(colour='gray98'),
         legend.text = element_text(colour='gray98'),
         legend.title = element_blank(),
-        legend.background = element_rect(fill='gray20')) +
+        legend.background = element_rect(fill='gray20'),
+        plot.margin=unit(c(0,2,0,0), 'cm')) +
   geom_point(aes(size = GISAcres*2, x = plot_date, color = NEWCAT, group=1, text=paste('Name:', IncidentNa, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
-  scale_color_manual(values=c("#FF5733", "#ffff00", "#56B4E9"))
+  scale_color_manual(values=c("#FF5733", "#ffff00","#56B4E9"))
 
 p1g<-ggplotly(p1, tooltip=FALSE)
 p2g<-ggplotly(p2, tooltip='text')
 
-subplot(p2g, p1g, which_layout = 2) %>% hide_legend() %>% highlight("plotly_hover")
+subplot(p2g, p1g, nrows=2) %>% hide_legend() %>% highlight("plotly_hover")
 ```
 
 
