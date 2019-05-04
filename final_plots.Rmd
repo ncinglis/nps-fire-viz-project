@@ -76,7 +76,7 @@ share<-SharedData$new(firessf)
 bscols(
   ggplotly(
     ggplot(share) + 
-    geom_sf(aes(fill=NEWCAT, group=1, text=paste('Name:', IncidentNa, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
+    geom_sf(aes(fill=NEWCAT, group=1, text=paste('Name:', IncidentNa, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", "<br>Size:", format(round(as.numeric(GISAcres), 0), big.mark=","), "acres")), alpha=0.5) +
     xlab("") +
     ylab("") +
     theme(plot.background = element_rect(fill='gray20'), 
@@ -105,7 +105,7 @@ bscols(
           legend.text = element_text(colour='gray98'),
           legend.title = element_blank(),
           legend.background = element_rect(fill='gray20')) +
-    geom_point(aes(size = GISAcres*2, x = plot_date, color = NEWCAT, group=1, text=paste('Name:', IncidentNa, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
+    geom_point(aes(size = GISAcres*2, x = plot_date, color = NEWCAT, group=1, text=paste('Name:', IncidentNa, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", "<br>Size:", format(round(as.numeric(GISAcres), 0), big.mark=","), "acres")), alpha=0.5) +
     scale_color_manual(values=c("#FF5733", "#ffff00","#56B4E9")), tooltip="text") %>%
     highlight("plotly_selected", persistent = FALSE, color=c('#ff00ff','#fce897','#e98756', '#33ffc2')),
     widths=c(6,6))
@@ -191,7 +191,7 @@ p2<-ggplot(n, aes(y=FIRE_YEAR)) +
         legend.title = element_blank(),
         legend.background = element_rect(fill='gray20'),
         plot.margin=unit(c(0,2,0,0), 'cm')) +
-  geom_point(aes(size = GISAcres*2, x = plot_date, color = NEWCAT, group=1, text=paste('Name:', IncidentNa, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
+  geom_point(aes(size = GISAcres*2, x = plot_date, color = NEWCAT, group=1, text=paste('Name:', IncidentNa, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", "<br>Size:", format(round(as.numeric(GISAcres), 0), big.mark=","), "acres")), alpha=0.5) +
   scale_color_manual(values=c("#FF5733", "#ffff00","#56B4E9"))
 
 p1g<-ggplotly(p1, tooltip=FALSE)
