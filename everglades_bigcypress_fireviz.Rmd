@@ -1,0 +1,122 @@
+---
+title: ""
+author: ""
+date: ""
+output: html_document
+css: C:/ncstate/715/finalproject/nps-fire-viz/markdown_CSS.css
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+#Visualizing Fire Regime Trends in Everglades National Park and Big Cypress National Preserve
+_Nikki C. Inglis_  
+_NC State Center for Geospatial Analytics_
+!(C:/ncstate/715/finalproject/nps-fire-viz-project/figs/cgaWhite.png)
+\  
+\    
+\    
+\   
+\  
+\  
+\  
+\  
+
+     
+```{r setup, include=FALSE}
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(ggthemes)
+library(scales)
+library(maps)
+library(mapproj)
+library(sp)
+library(rgdal)
+library(spatialEco)
+library(tidyverse)
+library(sf)
+library(plotly)
+library(Cairo)
+library(ggmap)
+library(leaflet)
+library(crosstalk)
+library(ggplot2)
+library(ggthemes)
+library(scales)
+library(maps)
+library(mapproj)
+library(sp)
+library(rgdal)
+library(spatialEco)
+library(tidyverse)
+library(sf)
+library(plotly)
+library(Cairo)
+library(ggspatial)
+library(leaflet)
+
+
+#Read in WFMI 
+everWFMI<-read.csv("data/ever.csv", stringsAsFactors = F)
+bicyWFMI<-read.csv("data/bicy.csv", stringsAsFactors = F)
+fires<-rbind(everWFMI, bicyWFMI)
+names(fires)
+
+#Format dates
+
+fires$StartDate<-as.character(fires$StartDate)
+fires$ContrDate<-as.character(fires$ControlDate)
+fires$StartDate<-as.Date(fires$StartDate, format="%m/%d/%Y", origin="1970-01-01")
+fires$ContrDate<-as.Date(fires$ContrDate, format="%m/%d/%Y", origin="1970-01-01")
+
+#Calculate duration
+fires$duration<-difftime(fires$ContrDate, fires$StartDate, units="days")
+
+#Add plotting date (maintain month and day, static year (2017))
+fires$plot_date<-as.Date(fires$StartDate, format = "%Y%m%d")
+fires$plot_date<-as.Date(format(fires$plot_date,"2017-%m-%d"))
+
+
+#Calculate NEWCAT 
+fires$NEWCAT<-case_when(fires$FireTypePr == 48 ~ "Prescribed Fire",
+                        fires$FireTypePr == 15 | fires$FireTypePr == 16 ~ "Mutual aid",
+                        fires$FireTypePr != 48 & fires$CauseCategory == 'Human' & fires$FireTypePr != 15 & fires$FireTypePr !=16 ~ "Human-caused wildfire",
+                        fires$CauseCategory == 'Natural' & fires$FireTypePr != 15 & fires$FireTypePr !=16 ~ "Natural wildfire")
+
+```
+
+```{r first, echo=F, warning=F, message=F, fig.width=16, fig.height=10}
+n <- highlight_key(fires, ~NEWCAT)
+p<-ggplot(n, aes(y=CalendarYear)) +
+           geom_hline(yintercept = seq(1971, 2018, by = 1), color = "gray", size = 0.04) +
+           scale_size_area(max_size = 15, guide = FALSE) +
+           scale_x_date(date_breaks = "months", date_labels = "%b") +
+           scale_y_reverse(limits = c(2018,1971), breaks = c(2015,2010,2005,2000,1995,1990,1985,1980,1975)) +
+           xlab("") +
+           ylab("") +
+           theme(plot.background = element_rect(fill='gray20'), 
+                 panel.background = element_rect(fill='gray20'), 
+                 axis.text.y = element_text(colour='gray98', size=16),
+                 axis.text.x = element_text(colour='gray98', size=10),
+                 panel.grid.major = element_blank(),   
+                 panel.grid.minor = element_blank(),
+                 panel.grid.major.y = element_line(size=1.2, color="gray"),
+                 legend.background = element_rect(fill="gray20"),
+                 legend.title = element_blank(),
+                  legend.text = element_text(colour="gray98"),
+                 axis.ticks.x = element_line(colour='gray98')) +
+            
+           geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, text=paste('Name:', FireName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
+           scale_color_manual(values=c("#FF5733", "#d397fc", "#ffff00", "#56B4E9")) +
+  guides(colour = guide_legend(override.aes = list(size=10)))
+
+
+ggplotly(p, tooltip="text")
+```
+
