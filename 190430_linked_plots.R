@@ -33,8 +33,7 @@ install.packages("ggspatial")
 
 
 
-fires<-readOGR("C:/ncstate/NPS/southflorida/allfires/all_fires_cost.shp")
-
+fires_wfu<-readOGR("C:/ncstate/NPS/southflorida/allfires/all_fires_cost.shp")
 
 everWFMI<-read.csv("C:/ncstate/NPS/southflorida/adddates/ever_dates.csv", stringsAsFactors = F)
 bicyWFMI<-read.csv("C:/ncstate/NPS/southflorida/adddates/BICY_dates.csv", stringsAsFactors = F)

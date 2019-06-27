@@ -13,15 +13,30 @@ css: C:/ncstate/715/finalproject/nps-fire-viz/markdown_CSS.css
   margin-right: auto;
 }
 </style>
-
-#Visualizing Fire Regime Trends in Everglades National Park and Big Cypress National Preserve
-_Nikki C. Inglis_  
-```{r, out.width = "400px", echo=F, fig.align='right'}
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+```{r, out.width = "300px", echo=F, fig.align='center'}
 knitr::include_graphics("C:/ncstate/NPS/IAWF/poster/ncstate-brick-4x1-red-rgb.svg")
 knitr::include_graphics("C:/ncstate/715/finalproject/nps-fire-viz-project/figs/cgaWhite.png")
 ```
+_Nikki C. Inglis_   
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+  
+##Explore the history of fire in Big Cypress National Preserve and Everglades National Park  
 
-\  
+_On the charts below, click on fires of each type (human-caused wildfires, natural wildires, prescribed burns and mutual aid responses) to highlight historical trends and patterns on annual and monthly temporal scales. Click the legend labels to toggle fire types on and off._
 
 ```{r setup, include=FALSE}
 library(dplyr)
@@ -88,7 +103,7 @@ fires$NEWCAT<-case_when(fires$FireTypePr == 48 ~ "Prescribed Fire",
 fires$week <- floor_date(fires$plot_date, "week")
 ```
 
-```{r first, echo=F, warning=F, message=F, fig.width=14, fig.height=10}
+```{r first, echo=F, warning=F, message=F, out.width="100%", fig.height=10}
 pal<-c("#FF5733", "#d397fc", "#ffff00", "#56B4E9")
 n <- highlight_key(fires, ~NEWCAT)
 p<-ggplot(n, aes(y=CalendarYear)) +
@@ -110,7 +125,7 @@ p<-ggplot(n, aes(y=CalendarYear)) +
         legend.text = element_text(colour="gray98"),
         axis.ticks.x = element_line(colour='gray98')) +
   
-  geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, text=paste('Name:', FireName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
+  geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, group=CalendarYear, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14, "Yes", "No"))), alpha=0.5) +
   scale_color_manual(values=c("#FF5733", "#d397fc", "#ffff00", "#56B4E9")) +
   guides(colour = guide_legend(override.aes = list(size=10)))
 
@@ -156,41 +171,89 @@ p3<-ggplot(n, aes(x=plot_date, fill = NEWCAT)) +
   ylab("Acres burned") +
   scale_fill_manual(values=pal)
 
-pg<-ggplotly(p, tooltip="text")
-p2g<-ggplotly(p2, tooltip=FALSE)
-p3g<-ggplotly(p3, tooltip=FALSE)
+pg<-ggplotly(p, tooltip="text", legendgroup='1')
+p2g<-ggplotly(p2, tooltip=FALSE, legendgroup='1')
+p3g<-ggplotly(p3, tooltip=FALSE, legendgroup='1')
 
-subplot(pg, subplot(p2g,p3g, margin=c(.02,.1,.1,.1), titleY=T, shareX=T), nrows = 2, heights=c(.7,.3), margin=c(0,0,0,0.1),titleY=T) %>% highlight("plotly_click") %>% highlight("plotly_click")
+subplot(pg %>% layout(showlegend=T),
+          subplot(p2g,p3g, margin=c(.02,.1,.1,.1), titleY=T), titleY=T, 
+   nrows = 2, heights=c(.7,.3), which_layout=1) %>% 
+    highlight("plotly_click")
+
+
+#subplot(pg, subplot(p2g,p3g, margin=c(.02,.1,.1,.1), titleY=T), nrows = 2, heights=c(.7,.3), margin=c(0,0,0,0.1),titleY=T) %>% highlight("plotly_click")
 
 ```
 
-\  
-\  
-\  
-\  
-\  
-\  
-\  
-\  
-\  
-\  
-\  
-\  
-\  
-\  
-\  
-\  
-\ 
-\  
-\  
-\  
-\ 
-\  
-\  
-\  
-\  
 
-```{r, coststatic, echo=F, warning=F, message=F, fig.width=14, fig.height=4}
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+
+##How much do fires cost to manage? 
+_Annual costs for both wildfire supression and prescribed fires were obtained from WBS records. Here's how the annual numbers have changed over the past 5 years_
+
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+
+```{r, coststatic, echo=F, warning=F, message=F, out.width="100%", fig.height=3, fig.align='center'}
 dualpal<-c("#56B4E9","#ffff00")
 cost<-read.csv("data/costs.csv", stringsAsFactors = F) 
 
@@ -209,22 +272,22 @@ c<-ggplot(costbicy, aes(x=year)) +
                      position='right') +
   theme(plot.background = element_rect(fill='gray20', color=NA), 
         panel.background = element_rect(fill='gray20'), 
-        axis.text.y = element_text(colour='gray98', size=12),
-        axis.text.x = element_text(colour='gray98', size=12, vjust = 5),
+        axis.text.y = element_text(colour='gray98', size=8),
+        axis.text.x = element_text(colour='gray98', size=8, vjust = 5),
         panel.grid.major.x = element_blank(), 
         axis.ticks.x.bottom = element_blank(),
         panel.grid.minor.x = element_blank(),
-        panel.grid.minor.y = element_line(colour = "gray98", size=0.3),
-        panel.grid.major.y = element_line(size=1.2, color="gray98"),
+        panel.grid.minor.y = element_line(colour = "gray98", size=0.1),
+        panel.grid.major.y = element_line(size=.5, color="gray98"),
         legend.background = element_rect(fill="gray20"),
         legend.position="bottom",
-        plot.title =element_text(colour='gray98', size=16, face='bold'),
+        plot.title =element_text(colour='gray98', size=10, face='bold'),
         legend.key = element_blank(),
         legend.title = element_blank(),
-        legend.text = element_text(colour="gray98", size=10),
+        legend.text = element_text(colour="gray98", size=6),
         axis.ticks.x = element_line(colour='gray98'),
         plot.margin=unit(c(0,1,0,0), 'cm'),
-        axis.title.y = element_text(colour='gray98', size=14)) +
+        axis.title.y = element_text(colour='gray98', size=8)) +
   ggtitle("BIG CYPRESS NATIONAL PRESERVE") +
   xlab("") +
   ylab("Annual cost") +
@@ -242,38 +305,87 @@ c2<-ggplot(costever, aes(x=year)) +
                      labels=dollar) +
   theme(plot.background = element_rect(fill ='gray20', color=NA), 
         panel.background = element_rect(fill='gray20'),
-        axis.text.y = element_text(colour='gray98', size=12),
-        axis.text.x = element_text(colour='gray98', size=12, vjust = 5),
+        axis.text.y = element_text(colour='gray98', size=8),
+        axis.text.x = element_text(colour='gray98', size=8, vjust = 5),
         axis.ticks.x.bottom = element_blank(),
         panel.grid.major.x = element_blank(), 
         panel.grid.minor.x = element_blank(),
-        panel.grid.minor.y = element_line(colour = "gray98", size=0.3),
-        panel.grid.major.y = element_line(size=1.2, color="gray98"),
+        panel.grid.minor.y = element_line(colour = "gray98", size=0.1),
+        panel.grid.major.y = element_line(size=.5, color="gray98"),
         legend.background = element_rect(fill="gray20"),
         legend.position="bottom",
-        plot.title =element_text(colour='gray98', size=16, face='bold'),
+        plot.title =element_text(colour='gray98', size=10, face='bold'),
         legend.key = element_blank(),
         legend.title = element_blank(),
-        legend.text = element_text(colour="gray98", size=10),
+        legend.text = element_text(colour="gray98", size=6),
         axis.ticks.x = element_line(colour='gray98'),
         plot.margin=unit(c(0,1,0,0), 'cm'),
-        axis.title.y = element_text(colour='gray98', size=14)) +
+        axis.title.y = element_text(colour='gray98', size=8)) +
   ggtitle("EVERGLADES NATIONAL PARK") +
   xlab("") +
   ylab("Annual cost") +
   scale_fill_manual(values=dualpal, labels=c("Prescribed fire", "Wildfire"))
+
 
 grid.arrange(c2, c, nrow=1)
 
 
 ```
 
-```{r, costplotly, echo=F, warning=F, message=F, fig.width=14, fig.height=6}
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+
+_Costs of individual wildfires, 2010-2017 are displayed below by date. The darker red the bubble, the more the fire costed to manage. The fire's size is reflected in the size of the bubble. Hover over each fire for more information._ 
+
+
+
+
+```{r, costplotly, echo=F, warning=F, message=F, out.width="100%", fig.height=4}
 c3<-ggplot(justcost, aes(y=CalendarYear)) +
   geom_hline(yintercept = seq(2010, 2018, by = 1), color = "gray", size = 0.04) +
   scale_size_area(max_size = 15) +
   scale_x_date(date_breaks = "months", date_labels = "%b") +
-  scale_y_reverse(limits = c(2018,2010), breaks = c(2015,2010)) +
+  scale_y_reverse(limits = c(2019,2010), breaks = c(2015,2010)) +
   xlab("") +
   ylab("") +
   theme(plot.background = element_rect(fill='gray20', colour = NA), 
@@ -287,9 +399,81 @@ c3<-ggplot(justcost, aes(y=CalendarYear)) +
         legend.title = element_blank(),
         legend.text = element_text(colour="gray98"),
         axis.ticks.x = element_line(colour='gray98')) +
-  geom_point(aes(size = ControlAcres^(1/2), x = plot_date, color = cost, text=paste('Name:', FireName, '<br>Cost:', dollar(justcost$cost), '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
-  scale_color_gradientn(colors=heat.colors(5)) +
+  geom_point(aes(size = ControlAcres^(1/2), x = plot_date, color = cost, text=paste('Name:', FireName, '<br>Cost:', ReportingUnitName,'<br>Type:', dollar(justcost$cost), '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days",  "days", '<br>WFU?:', ifelse(FireTypePr==14, "Yes", "No"))), alpha=0.5) +
+  scale_color_gradientn(colors=rev(heat.colors(5))) +
   guides(colour = guide_legend(override.aes = list(size=10)))
-c3g<-ggplotly(c3)
+c3g<-ggplotly(c3, tooltip="text")
 c3g
 ```
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+
+
+
+#Explore the spatial nature of Everglades and Big Cypress Fires
+_The chart on the left is the same as the one at the top of this page, with one difference. Highlighting on this chart will highlight the corredsponding mark on the map on the right, showing where the fire occured. First, select a color with the "brush" tool located above the map. Then, select a time period of fires on the left. Choose a new color to highlight multiple periods of interest. _ 
+
+```{r mapbox, echo=F, warning=F, message=F, out.width="100%", fig.height=16}
+Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1Ijoibmlra2lpIiwiYSI6ImNqdWxhcHJqMTB1eXk0ZG80dDR2NjVkZnMifQ.jCTe3UM5cUDd67MWTlAp1A')
+share<-SharedData$new(fires)
+
+pp<-ggplot(share, aes(y=CalendarYear)) +
+  geom_hline(yintercept = seq(1971, 2018, by = 1), color = "gray", size = 0.04) +
+  scale_size_area(max_size = 15, guide = FALSE) +
+  scale_x_date(date_breaks = "months", date_labels = "%b") +
+  scale_y_reverse(limits = c(2018,1971), breaks = c(2015,2010,2005,2000,1995,1990,1985,1980,1975)) +
+  xlab("") +
+  ylab("") +
+  theme(plot.background = element_rect(fill='gray20'), 
+        panel.background = element_rect(fill='gray20'), 
+        axis.text.y = element_text(colour='gray98', size=16),
+        axis.text.x = element_text(colour='gray98', size=10),
+        panel.grid.major = element_blank(),   
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_line(size=1.2, color="gray"),
+        legend.background = element_rect(fill="gray20"),
+        legend.title = element_blank(),
+        legend.text = element_text(colour="gray98"),
+        axis.ticks.x = element_line(colour='gray98')) +
+  
+  geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName,'<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14, "Yes", "No"))), alpha=0.5) +
+  scale_color_manual(values=c("#FF5733", "#d397fc", "#ffff00", "#56B4E9")) +
+  guides(colour = guide_legend(override.aes = list(size=10)))
+
+
+comp<-c('#33ffc2', '#fce897', '#ff00ff', '#e98756')
+names(comp)<-c("1", "2", "3", "4")
+ppg<-ggplotly(pp, tooltip='text')
+
+bscols(ppg %>% highlight("plotly_selected", persistent=T) %>% hide_legend(),
+  plot_mapbox(share, x=~LongitudeDD, y=~LatitudeDD, color=~NEWCAT, colors=pal,
+                 alpha=0.7, size=~(ControlAcres^(1/2)), mode="scattermapbox", text=~paste('Name:', FireName, '<br>Park:', ReportingUnitName,'<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14, "Yes", "No")), hoverinfo="text") %>% layout(plot_bgcolor = '#333333', paper_bgcolor = '#333333',
+                                                                                     mapbox = list(style = 'dark', zoom=7, center =list(lat =25.683891,lon = -80.872782))) %>%  highlight(dynamic = TRUE, persistent=T, color=comp),  widths=c(6,6))
+  
+```
+

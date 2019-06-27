@@ -19,7 +19,7 @@ library(ggspatial)
 library(leaflet)
 library(lubridate)
 library(gridExtra)
-devtools::install_github("ropensci/plotly")
+
 
 #Read in WFMI 
 everWFMI<-read.csv("data/ever.csv", stringsAsFactors = F)
@@ -54,7 +54,7 @@ fires$week <- floor_date(fires$plot_date, "week")
 #Make base chart, all fires, colored by Cause
 
 pal<-c("#FF5733", "#d397fc", "#ffff00", "#56B4E9")
-n <- highlight_key(fires, ~NEWCAT)
+n <- highlight_key(fires)
 p<-ggplot(n, aes(y=CalendarYear)) +
   geom_hline(yintercept = seq(1971, 2018, by = 1), color = "gray", size = 0.04) +
   scale_size_area(max_size = 15, guide = FALSE) +
@@ -74,9 +74,12 @@ p<-ggplot(n, aes(y=CalendarYear)) +
         legend.text = element_text(colour="gray98"),
         axis.ticks.x = element_line(colour='gray98')) +
   
-  geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, text=paste('Name:', FireName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
+  geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName,'<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14, "Yes", "No"))), alpha=0.5) +
   scale_color_manual(values=c("#FF5733", "#d397fc", "#ffff00", "#56B4E9")) +
   guides(colour = guide_legend(override.aes = list(size=10)))
+
+
+pg<-ggplotly(p, tooltip='text')
 
 
 p2<- ggplot(n, aes(x=plot_date, fill = NEWCAT)) + 
@@ -121,13 +124,95 @@ p3<-ggplot(n, aes(x=plot_date, fill = NEWCAT)) +
   scale_fill_manual(values=pal)
 
 pg<-ggplotly(p, tooltip="text")
-p2g<-ggplotly(p2, tooltip=FALSE)
-p3g<-ggplotly(p3, tooltip=FALSE)
+p2g<-ggplotly(p2, tooltip=FALSE, dynamicTicks = T) %>% layout(xaxis=list( type='date',
+                                                                        tickformat='%b',
+                                                                        dtick="M1"))
+p3g<-ggplotly(p3, tooltip=FALSE, dynamicTicks = T) %>% layout(xaxis=list( type='date',
+                                                                          tickformat='%b',
+                                                                          dtick="M1"))
+subplot(pg, subplot(p2g,p3g, margin=c(.02,.1,.1,.1), titleY=T), nrows = 2, heights=c(.7,.3),titleY=T) %>% highlight("plotly_click") %>% highlight("plotly_click")
 
-subplot(pg, subplot(p2g,p3g, margin=c(.02,.1,.1,.1), titleY=T), nrows = 2, heights=c(.7,.3), margin=c(0,0,0,0.1),titleY=T) %>% highlight("plotly_click") %>% highlight("plotly_click")
+ggplot(n, aes(x=plot_date, y=CalendarYear, fill = NEWCAT)) + 
+  geom_col()
+
+l <- list(
+  font = list(
+    family = "sans-serif",
+    size = 12,
+    color = "#FAFAFA"),
+  bgcolor = "gray20")
 
 
-#Static plots of cost over time
+f<- list(
+  family = "Arial, sans-serif",
+  size = 18,
+  color = "gray98")
+
+
+
+hline <- function(y = 0, color = "#FAFAFA") {
+  list(
+    type = "line", 
+    x0 = 0, 
+    x1 = 1, 
+    xref = "paper",
+    y0 = y, 
+    y1 = y, 
+    line = list(color = color,
+                width=0.2)
+  )
+}
+
+years<-c(1971:2018)
+
+
+plotly1<-plot_ly(data=n, x=~plot_date, 
+        y=~CalendarYear, 
+        color=~NEWCAT,
+        colors=pal,
+        alpha=0.7,
+        type='scatter',
+        mode='markers',
+        size=~(ControlAcres^(2/3)),
+        text=paste('Name:', fires$FireName, '<br>Park:', fires$ReportingUnitName,'<br>Type:', fires$NEWCAT, '<br>Date:', format(fires$StartDate, "%b %d %Y"), '<br>Duration:', fires$duration, "days", '<br>WFU?:', ifelse(fires$FireTypePr==14, "Yes", "No"), '<br>Acres:', fires$ControlAcres),
+        hoverinfo='text',
+        marker = list(sizeref=4,sizemode='diameter')) %>% layout(paper_bgcolor='#333333', 
+         plot_bgcolor='#333333',
+         yaxis=list(family = "Arial, sans-serif",
+                    size = 18,
+                    color = "#FAFAFA",
+                    title='',
+                    autorange="reversed",
+                    gridcolor = toRGB("gray98"),
+                    gridwidth=2,
+                    tickvals = seq(1975, 2015, 10)),
+         xaxis=list( family = "Arial, sans-serif",
+                     size = 18,
+                     color = "#FAFAFA",
+                     title='',
+                     ticks="outside",
+                     type='date',
+                     tickformat='%b',
+                     dtick="M1",
+                     showgrid=F),
+         shapes = lapply(years, FUN=hline))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 dualpal<-c("#56B4E9","#ffff00")
 cost<-read.csv("data/costs.csv", stringsAsFactors = F) 
 
@@ -200,6 +285,7 @@ c2<-ggplot(costever, aes(x=year)) +
 
 grid.arrange(c2, c, nrow=1)
 
+?ggplotly
 
 #Plotly of individual wildfire costs (size = size, color = cost)
 WFMIcosts<-read.csv("C:/ncstate/NPS/southflorida/2010-2018_code_ID_combo.csv")
@@ -215,7 +301,7 @@ c3<-ggplot(justcost, aes(y=CalendarYear)) +
   scale_y_reverse(limits = c(2018,2010), breaks = c(2015,2010)) +
   xlab("") +
   ylab("") +
-  theme(plot.background = element_rect(fill='gray20'), 
+  theme(plot.background = element_rect(fill='gray20', color = NA), 
         panel.background = element_rect(fill='gray20'), 
         axis.text.y = element_text(colour='gray98', size=16),
         axis.text.x = element_text(colour='gray98', size=10),
@@ -238,36 +324,108 @@ pal<-colorFactor(c("#56B4E9", "#ffff00", "#FF5733", "#d397fc"), fires$NEWCAT)
 
 
 
+#Linked brushing with leaflet 
+
+
+devtools::install_github("rstudio/leaflet#346")
+
+
+
+library(leaflet)
+
+qquery <- highlight_key(fires)
+
+l <- list(
+  font = list(
+    family = "sans-serif",
+    size = 12,
+    color = "#FAFAFA"),
+  bgcolor = "gray20")
+
+
+f<- list(
+  family = "Arial, sans-serif",
+  size = 18,
+  color = "gray98")
+
+
+
+hline <- function(y = 0, color = "#FAFAFA") {
+  list(
+    type = "line", 
+    x0 = 0, 
+    x1 = 1, 
+    xref = "paper",
+    y0 = y, 
+    y1 = y, 
+    line = list(color = color,
+                width=0.2)
+  )
+}
+
+years<-c(1971:2018)
+
+
+plotly1<-plot_ly(data=qquery, x=~plot_date, 
+                 y=~CalendarYear, 
+                 color=~NEWCAT,
+                 colors=pal,
+                 alpha=0.7,
+                 type='scatter',
+                 mode='markers',
+                 size=~(ControlAcres^(2/3)),
+                 text=paste('Name:', fires$FireName, '<br>Park:', fires$ReportingUnitName,'<br>Type:', fires$NEWCAT, '<br>Date:', format(fires$StartDate, "%b %d %Y"), '<br>Duration:', fires$duration, "days", '<br>WFU?:', ifelse(fires$FireTypePr==14, "Yes", "No"), '<br>Acres:', fires$ControlAcres),
+                 hoverinfo='text',
+                 marker = list(sizeref=4,sizemode='diameter')) %>% layout(paper_bgcolor='#333333', 
+                                                                          plot_bgcolor='#333333',
+                                                                          yaxis=list(family = "Arial, sans-serif",
+                                                                                     size = 18,
+                                                                                     color = "#FAFAFA",
+                                                                                     title='',
+                                                                                     autorange="reversed",
+                                                                                     gridcolor = toRGB("gray98"),
+                                                                                     gridwidth=2,
+                                                                                     tickvals = seq(1975, 2015, 10)),
+                                                                          xaxis=list( family = "Arial, sans-serif",
+                                                                                      size = 18,
+                                                                                      color = "#FAFAFA",
+                                                                                      title='',
+                                                                                      ticks="outside",
+                                                                                      type='date',
+                                                                                      tickformat='%b',
+                                                                                      dtick="M1",
+                                                                                      showgrid=F),
+                                                                          shapes = lapply(years, FUN=hline)) %>% highlight("plotly_selected", dynamic = TRUE)
+
+
+Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1Ijoibmlra2lpIiwiYSI6ImNqdWxhcHJqMTB1eXk0ZG80dDR2NjVkZnMifQ.jCTe3UM5cUDd67MWTlAp1A')
 share<-SharedData$new(fires)
 
-
+library(leaflet)
 bscols(
 leaflet(share) %>%
   addProviderTiles(providers$Esri.WorldImagery, options=providerTileOptions(opacity = 0.5)) %>%
-  addPolygons(fillColor = ~pal(NEWCAT), weight = 1, smoothFactor = 0.5,
-                          opacity = 0.7, fillOpacity = 0.5, color='gray') %>% 
-  highlight(dynamic = TRUE, persistent = TRUE, color=c('#e98756', '#ff00ff', '#33ffc2', '#fce897')),
-ggplotly(ggplot(share, aes(y=FIRE_YEAR)) +
-           geom_hline(yintercept = seq(1992, 2015, by = 1), color = "gray", size = 0.04) +
-           scale_size_area(max_size = 15, guide = FALSE) +
-           scale_x_date(date_breaks = "months", date_labels = "%b") +
-           scale_y_reverse(limits = c(2015,1992), breaks = c(2010,2005,2000,1995)) +
-           xlab("") +
-           ylab("") +
-           theme(plot.background = element_rect(fill='gray20'), 
-                 panel.background = element_rect(fill='gray20'), 
-                 axis.text.y = element_text(colour='gray98', size=16),
-                 axis.text.x = element_text(colour='gray98', size=10),
-                 panel.grid.major = element_blank(),   
-                 panel.grid.minor = element_blank(),
-                 panel.grid.major.y = element_line(size=1.2, color="gray"),
-                 legend.position='none',
-                 axis.ticks.x = element_line(colour='gray98')) +
-           geom_point(aes(size = GISAcres*2, x = plot_date, color = NEWCAT, group=1, text=paste('Name:', IncidentNa, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days")), alpha=0.5) +
-           scale_color_manual(values=c("#56B4E9", "#ffff00", "#FF5733", "#d397fc")), tooltip="text") %>%
-  highlight("plotly_selected", persistent = TRUE, color=c('#e98756', '#ff00ff', '#33ffc2', '#fce897')),
+  addCircles(fillColor = ~NEWCAT, weight = 1,
+                          opacity = 0.7, fillOpacity = 0.5, color='gray', lat=fires$LatitudeNAD83, lng=fires$LongitudeNAD83) %>% 
+  highlight(dynamic = TRUE, color=c('#e98756', '#ff00ff', '#33ffc2', '#fce897')), pg %>% highlight("plotly_selected", dynamic = TRUE),
 widths=c(6,6))
   
+
+
+plot_mapbox(share, x=~LongitudeDD, y=~LatitudeDD, mode="scattermapbox") %>% layout(title = 'Meteorites by Class',
+                                                                                font = list(color='white'),
+                                                                                plot_bgcolor = '#191A1A', paper_bgcolor = '#191A1A',
+                                                                                mapbox = list(style = 'dark'),
+                                                                                legend = list(orientation = 'h',
+                                                                                              font = list(size = 8)),
+                                                                                margin = list(l = 25, r = 25,
+                                                                                              b = 25, t = 25,
+                                                                                              pad = 2))
+
+
+
+
+
 
 
 
