@@ -163,7 +163,7 @@ bscols(
 
 firessf<-st_as_sf(fires)
 
-register_google(key='AIzaSyDDb12jeCyz0Pq3ZPajM2clziwuhiqnpaY')
+register_google(key='REDACTED')
 
 
 bbox<-st_bbox(firessf)
