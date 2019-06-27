@@ -436,7 +436,7 @@ c3g
 
 
 #Explore the spatial nature of Everglades and Big Cypress fires
-_The chart on the left is the same as the one at the top of this page, with one difference. Highlighting on this chart will highlight the corredsponding mark on the map on the right, showing where the fire occured. First, select a color with the "brush" tool located above the map. Then, select a time period of fires on the left. Choose a new color to highlight multiple periods of interest. _ 
+_The chart on the left is the same as the one at the top of this page, with one difference. Highlighting on this chart will highlight the corresponding mark on the map on the right, showing where the fire occured. First, select a color with the brush tool located above the map. Then, select a time period of fires on the left. Choose a new color to highlight multiple periods of interest. _ 
 
 ```{r mapbox, echo=F, warning=F, message=F, out.width="100%", fig.height=16}
 Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1Ijoibmlra2lpIiwiYSI6ImNqdWxhcHJqMTB1eXk0ZG80dDR2NjVkZnMifQ.jCTe3UM5cUDd67MWTlAp1A')
