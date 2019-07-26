@@ -49,7 +49,7 @@ fires$NEWCAT<-case_when(fires$FireTypePr == 48 ~ "Prescribed Fire",
                         fires$CauseCategory == 'Natural' & fires$FireTypePr != 15 & fires$FireTypePr !=16 ~ "Natural wildfire")
 fires$week <- floor_date(fires$plot_date, "week")
 
-
+fires$lat
 
 #Make base chart, all fires, colored by Cause
 
