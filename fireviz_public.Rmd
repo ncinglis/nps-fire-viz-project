@@ -125,7 +125,7 @@ p<-ggplot(n, aes(y=CalendarYear)) +
         legend.text = element_text(colour="gray98"),
         axis.ticks.x = element_line(colour='gray98')) +
   
-  geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, group=CalendarYear, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14, "Yes", "No"))), alpha=0.5) +
+  geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, group=CalendarYear, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass)), alpha=0.5) +
   scale_color_manual(values=c("#FF5733", "#d397fc", "#ffff00", "#56B4E9")) +
   guides(colour = guide_legend(override.aes = list(size=10)))
 
@@ -269,7 +269,7 @@ pp<-ggplot(share, aes(y=CalendarYear)) +
         legend.text = element_text(colour="gray98"),
         axis.ticks.x = element_line(colour='gray98')) +
   
-  geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName,'<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14, "Yes", "No"))), alpha=0.5) +
+  geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass)), alpha=0.5) +
   scale_color_manual(values=c("#FF5733", "#d397fc", "#ffff00", "#56B4E9")) +
   guides(colour = guide_legend(override.aes = list(size=10)))
 
@@ -280,7 +280,7 @@ ppg<-ggplotly(pp, tooltip='text')
 
 bscols(ppg %>% highlight("plotly_selected", persistent=T) %>% hide_legend(),
   plot_mapbox(share, x=~LongitudeDD, y=~LatitudeDD, color=~NEWCAT, colors=pal,
-                 alpha=0.7, size=~(ControlAcres^(1/2)), mode="scattermapbox", text=~paste('Name:', FireName, '<br>Park:', ReportingUnitName,'<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14, "Yes", "No")), hoverinfo="text") %>% layout(plot_bgcolor = '#333333', paper_bgcolor = '#333333',
+                 alpha=0.7, size=~(ControlAcres^(1/2)), mode="scattermapbox", text=~paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass), hoverinfo="text") %>% layout(plot_bgcolor = '#333333', paper_bgcolor = '#333333',
                                                                                      mapbox = list(style = 'dark', zoom=7, center =list(lat =25.683891,lon = -80.872782))) %>%  highlight(dynamic = TRUE, persistent=T, color=comp),  widths=c(6,6))
   
 ```

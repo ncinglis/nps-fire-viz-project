@@ -125,7 +125,7 @@ p<-ggplot(n, aes(y=CalendarYear)) +
         legend.text = element_text(colour="gray98"),
         axis.ticks.x = element_line(colour='gray98')) +
   
-  geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, group=CalendarYear, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14, "Yes", "No"))), alpha=0.5) +
+  geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, group=CalendarYear, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass)), alpha=0.5) +
   scale_color_manual(values=c("#FF5733", "#d397fc", "#ffff00", "#56B4E9")) +
   guides(colour = guide_legend(override.aes = list(size=10)))
 
