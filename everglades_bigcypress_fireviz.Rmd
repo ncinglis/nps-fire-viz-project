@@ -75,31 +75,27 @@ library(gridExtra)
 library(RColorBrewer)
 
 #Read in WFMI 
-everWFMI<-read.csv("data/ever.csv", stringsAsFactors = F)
-bicyWFMI<-read.csv("data/bicy.csv", stringsAsFactors = F)
-fires<-rbind(everWFMI, bicyWFMI)
-names(fires)
+fires <-read.csv("data/all_data_fmus.csv", stringsAsFactors = F)
 
-#Format dates
+
+#Calculate NEWCAT 
+fires$NEWCAT<-case_when(fires$FireTypePr == 48 ~ "Prescribed Fire",
+                        fires$FireTypePr == 15 | fires$FireTypePr == 16 & is.na(fires$NAME) == T ~ "Mutual aid",
+                        fires$CauseCategory == 'Human' ~ "Human-caused wildfire",
+                        fires$CauseCategory == 'Natural'  ~ "Natural wildfire", TRUE ~ "other")
+
+fires<-fires[fires$NEWCAT !='other',]
 
 fires$StartDate<-as.character(fires$StartDate)
 fires$ContrDate<-as.character(fires$ControlDate)
-fires$StartDate<-as.Date(fires$StartDate, format="%m/%d/%Y", origin="1970-01-01")
-fires$ContrDate<-as.Date(fires$ContrDate, format="%m/%d/%Y", origin="1970-01-01")
+fires$StartDate<-as.Date(fires$StartDate, format="%Y-%m-%d", origin="1970-01-01")
+fires$ContrDate<-as.Date(fires$ContrDate, format="%Y-%m-%d", origin="1970-01-01")
 
-#Calculate duration
 fires$duration<-difftime(fires$ContrDate, fires$StartDate, units="days")
 
 #Add plotting date (maintain month and day, static year (2017))
 fires$plot_date<-as.Date(fires$StartDate, format = "%Y%m%d")
 fires$plot_date<-as.Date(format(fires$plot_date,"2017-%m-%d"))
-
-
-#Calculate NEWCAT 
-fires$NEWCAT<-case_when(fires$FireTypePr == 48 ~ "Prescribed Fire",
-                        fires$FireTypePr == 15 | fires$FireTypePr == 16 ~ "Mutual aid",
-                        fires$FireTypePr != 48 & fires$CauseCategory == 'Human' & fires$FireTypePr != 15 & fires$FireTypePr !=16 ~ "Human-caused wildfire",
-                        fires$CauseCategory == 'Natural' & fires$FireTypePr != 15 & fires$FireTypePr !=16 ~ "Natural wildfire")
 fires$week <- floor_date(fires$plot_date, "week")
 ```
 
@@ -152,8 +148,8 @@ p2<- ggplot(n, aes(x=plot_date, fill = NEWCAT)) +
 
 
 
-p3<-ggplot(n, aes(x=plot_date, fill = NEWCAT)) + 
-  geom_col(aes(x=week, y=ControlAcres), alpha=0.7, color=NA, position = "identity") +
+p3<-ggplot(n, aes(x=plot_date, y=ControlAcres, fill = NEWCAT)) + 
+  stat_summary(aes(x=week), fun.y="mean", geom="bar", alpha=0.7) +
   scale_x_date(date_breaks = "months", date_labels = "%b") +
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE)) +
   theme(plot.background = element_rect(fill='gray20'), 
@@ -170,6 +166,7 @@ p3<-ggplot(n, aes(x=plot_date, fill = NEWCAT)) +
   xlab("") +
   ylab("Acres burned") +
   scale_fill_manual(values=pal)
+
 
 pg<-ggplotly(p, tooltip="text", legendgroup='1')
 p2g<-ggplotly(p2, tooltip=FALSE, legendgroup='1')
@@ -399,7 +396,7 @@ c3<-ggplot(justcost, aes(y=CalendarYear)) +
         legend.title = element_blank(),
         legend.text = element_text(colour="gray98"),
         axis.ticks.x = element_line(colour='gray98')) +
-  geom_point(aes(size = ControlAcres^(1/2), x = plot_date, color = cost, text=paste('Name:', FireName, '<br>Cost:', ReportingUnitName,'<br>Type:', dollar(justcost$cost), '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days",  "days", '<br>WFU?:', ifelse(FireTypePr==14, "Yes", "No"))), alpha=0.5) +
+  geom_point(aes(size = ControlAcres^(1/2), x = plot_date, color = cost, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass)), alpha=0.5) +
   scale_color_gradientn(colors=rev(heat.colors(5))) +
   guides(colour = guide_legend(override.aes = list(size=10)))
 c3g<-ggplotly(c3, tooltip="text")
@@ -461,7 +458,7 @@ pp<-ggplot(share, aes(y=CalendarYear)) +
         legend.text = element_text(colour="gray98"),
         axis.ticks.x = element_line(colour='gray98')) +
   
-  geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName,'<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14, "Yes", "No"))), alpha=0.5) +
+  geom_point(aes(size = ControlAcres*2, x = plot_date, color = NEWCAT, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass)), alpha=0.5) +
   scale_color_manual(values=c("#FF5733", "#d397fc", "#ffff00", "#56B4E9")) +
   guides(colour = guide_legend(override.aes = list(size=10)))
 
@@ -472,8 +469,7 @@ ppg<-ggplotly(pp, tooltip='text')
 
 bscols(ppg %>% highlight("plotly_selected", persistent=T) %>% hide_legend(),
   plot_mapbox(share, x=~LongitudeDD, y=~LatitudeDD, color=~NEWCAT, colors=pal,
-                 alpha=0.7, size=~(ControlAcres^(1/2)), mode="scattermapbox", text=~paste('Name:', FireName, '<br>Park:', ReportingUnitName,'<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14, "Yes", "No")), hoverinfo="text") %>% layout(plot_bgcolor = '#333333', paper_bgcolor = '#333333',
-                                                                                     mapbox = list(style = 'dark', zoom=7, center =list(lat =25.683891,lon = -80.872782))) %>%  highlight(dynamic = TRUE, persistent=T, color=comp),  widths=c(6,6))
+                 alpha=0.7, size=~(ControlAcres^(1/2)), mode="scattermapbox", text=~paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass), hoverinfo="text") %>% layout(plot_bgcolor = '#333333', paper_bgcolor = '#333333', mapbox = list(style = 'dark', zoom=7, center =list(lat =25.683891,lon = -80.872782))) %>% highlight(dynamic = TRUE, persistent=T, color=comp),  widths=c(6,6))
   
 ```
 
