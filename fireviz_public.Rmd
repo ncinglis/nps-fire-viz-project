@@ -30,6 +30,7 @@ knitr::include_graphics("C:/ncstate/715/finalproject/nps-fire-viz-project/figs/c
 ```
 _Nikki C. Inglis_   
 &nbsp;
+_ncinglis@ncsu.edu_ 
 &nbsp;
 &nbsp;
 &nbsp;
@@ -75,31 +76,27 @@ library(gridExtra)
 library(RColorBrewer)
 
 #Read in WFMI 
-everWFMI<-read.csv("data/ever.csv", stringsAsFactors = F)
-bicyWFMI<-read.csv("data/bicy.csv", stringsAsFactors = F)
-fires<-rbind(everWFMI, bicyWFMI)
-names(fires)
+fires <-read.csv("data/all_data_fmus.csv", stringsAsFactors = F)
 
-#Format dates
+
+#Calculate NEWCAT 
+fires$NEWCAT<-case_when(fires$FireTypePr == 48 ~ "Prescribed Fire",
+                        fires$FireTypePr == 15 | fires$FireTypePr == 16 & is.na(fires$NAME) == T ~ "Mutual aid",
+                        fires$CauseCategory == 'Human' ~ "Human-caused wildfire",
+                        fires$CauseCategory == 'Natural'  ~ "Natural wildfire", TRUE ~ "other")
+
+fires<-fires[fires$NEWCAT !='other',]
 
 fires$StartDate<-as.character(fires$StartDate)
 fires$ContrDate<-as.character(fires$ControlDate)
-fires$StartDate<-as.Date(fires$StartDate, format="%m/%d/%Y", origin="1970-01-01")
-fires$ContrDate<-as.Date(fires$ContrDate, format="%m/%d/%Y", origin="1970-01-01")
+fires$StartDate<-as.Date(fires$StartDate, format="%Y-%m-%d", origin="1970-01-01")
+fires$ContrDate<-as.Date(fires$ContrDate, format="%Y-%m-%d", origin="1970-01-01")
 
-#Calculate duration
 fires$duration<-difftime(fires$ContrDate, fires$StartDate, units="days")
 
 #Add plotting date (maintain month and day, static year (2017))
 fires$plot_date<-as.Date(fires$StartDate, format = "%Y%m%d")
 fires$plot_date<-as.Date(format(fires$plot_date,"2017-%m-%d"))
-
-
-#Calculate NEWCAT 
-fires$NEWCAT<-case_when(fires$FireTypePr == 48 ~ "Prescribed Fire",
-                        fires$FireTypePr == 15 | fires$FireTypePr == 16 ~ "Mutual aid",
-                        fires$FireTypePr != 48 & fires$CauseCategory == 'Human' & fires$FireTypePr != 15 & fires$FireTypePr !=16 ~ "Human-caused wildfire",
-                        fires$CauseCategory == 'Natural' & fires$FireTypePr != 15 & fires$FireTypePr !=16 ~ "Natural wildfire")
 fires$week <- floor_date(fires$plot_date, "week")
 ```
 
@@ -152,8 +149,8 @@ p2<- ggplot(n, aes(x=plot_date, fill = NEWCAT)) +
 
 
 
-p3<-ggplot(n, aes(x=plot_date, fill = NEWCAT)) + 
-  geom_col(aes(x=week, y=ControlAcres), alpha=0.7, color=NA, position = "identity") +
+p3<-ggplot(n, aes(x=plot_date, y=ControlAcres, fill = NEWCAT)) + 
+  stat_summary(aes(x=week), fun.y="mean", geom="bar", alpha=0.7) +
   scale_x_date(date_breaks = "months", date_labels = "%b") +
   scale_y_continuous(labels=function(x) format(x, big.mark = ",", scientific = FALSE)) +
   theme(plot.background = element_rect(fill='gray20'), 
@@ -168,8 +165,9 @@ p3<-ggplot(n, aes(x=plot_date, fill = NEWCAT)) +
         legend.position='none',
         axis.title.y = element_text(colour='gray98', size=14)) +
   xlab("") +
-  ylab("Acres burned") +
+  ylab("Average acres burned") +
   scale_fill_manual(values=pal)
+
 
 pg<-ggplotly(p, tooltip="text", legendgroup='1')
 p2g<-ggplotly(p2, tooltip=FALSE, legendgroup='1')
@@ -248,7 +246,8 @@ _The chart on the left is the same as the one at the top of this page, with one 
 
 ```{r mapbox, echo=F, warning=F, message=F, out.width="100%", fig.height=16}
 Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1Ijoibmlra2lpIiwiYSI6ImNqdWxhcHJqMTB1eXk0ZG80dDR2NjVkZnMifQ.jCTe3UM5cUDd67MWTlAp1A')
-share<-SharedData$new(fires)
+firesb<-fires[fires$FireName != "LOGGERHEAD" & fires$FireName!= "CRACKUP #1" & fires$FireName!= "ROBERTS" & fires$FireName != "GUM SLGH 1" & fires$FireName != "BLOCKSDOF" & fires$FireName != "ROG NE",]
+share<-SharedData$new(firesb)
 
 pp<-ggplot(share, aes(y=CalendarYear)) +
   geom_hline(yintercept = seq(1971, 2018, by = 1), color = "gray", size = 0.04) +

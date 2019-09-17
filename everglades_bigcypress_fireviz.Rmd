@@ -30,6 +30,7 @@ knitr::include_graphics("C:/ncstate/715/finalproject/nps-fire-viz-project/figs/c
 ```
 _Nikki C. Inglis_   
 &nbsp;
+_ncinglis@ncsu.edu_   
 &nbsp;
 &nbsp;
 &nbsp;
@@ -437,7 +438,8 @@ _The chart on the left is the same as the one at the top of this page, with one 
 
 ```{r mapbox, echo=F, warning=F, message=F, out.width="100%", fig.height=16}
 Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1Ijoibmlra2lpIiwiYSI6ImNqdWxhcHJqMTB1eXk0ZG80dDR2NjVkZnMifQ.jCTe3UM5cUDd67MWTlAp1A')
-share<-SharedData$new(fires)
+firesb<-fires[fires$FireName != "LOGGERHEAD" & fires$FireName!= "CRACKUP #1" & fires$FireName!= "ROBERTS" & fires$FireName != "GUM SLGH 1" & fires$FireName != "BLOCKSDOF" & fires$FireName != "ROG NE",]
+share<-SharedData$new(firesb)
 
 pp<-ggplot(share, aes(y=CalendarYear)) +
   geom_hline(yintercept = seq(1971, 2018, by = 1), color = "gray", size = 0.04) +

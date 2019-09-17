@@ -151,7 +151,7 @@ bscols(
 
 
 
-
+summary
 
 
 
@@ -231,10 +231,6 @@ bscols(ggplotly(ggplot(share) +
     geom_point(aes(size = GISAcres*2, x = plot_date, color = NEWCAT), alpha=0.5) +
     scale_color_manual(values=c("#ffff00", "#ff5733", "#56b4b9", "#d397fc"))) %>%
     highlight("plotly_selected", persistent = FALSE))
-
-
-
-
 
 
 

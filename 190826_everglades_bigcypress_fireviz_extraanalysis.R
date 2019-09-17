@@ -101,6 +101,7 @@ ma
 #Make fires spatial
 #Spatial join into FMUs
 
+
 fmu<-readOGR("C:/ncstate/NPS/southflorida/FMUs.shp", stringsAsFactors = F)
 refco<-crs(fmu)
 
@@ -121,12 +122,19 @@ fmusdt<-as.data.table(new)
 
 table(is.na(fmusdt$Label))
 
-plot(sd, add=T)
 
 
-plot(fmu)
-plot(sd, add=T)
 
+###Check mutual aids to see if 15 and 16s are different
+ma <-fmusdt[NEWCAT == 'Mutual aid' & is.na(NAME)==T]
+
+write.csv(fmusdt, "data/all_data_fmus.csv")
+
+Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1Ijoibmlra2lpIiwiYSI6ImNqdWxhcHJqMTB1eXk0ZG80dDR2NjVkZnMifQ.jCTe3UM5cUDd67MWTlAp1A')
+plot_mapbox(ma, x=~LongitudeDD, y=~LatitudeDD, color=~FireTypePr,
+            alpha=0.7, size=~(ControlAcres^(1/2)), 
+            mode="scattermapbox", 
+            text=~paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass), hoverinfo="text") %>% layout(plot_bgcolor = '#333333', paper_bgcolor = '#333333', mapbox = list(style = 'dark', zoom=7, center =list(lat =25.683891,lon = -80.872782)))
 
 #Divide up by time period
 #Then divide up by FMU
@@ -178,10 +186,10 @@ ma_fmu_diff <- ma_fmu[timeperiod==1 | timeperiod==2,
                            avg = perc(avg[timeperiod==1], avg[timeperiod==2]) ), 
                       by=.(NAME, UNITNAME)]
 
-nat_fmu_diff
-human_fmu_diff
-rx_fmu_diff
-ma_fmu_diff
+write.csv(nat_fmu_diff, "C:/ncstate/NPS/southflorida/viz_summary/nat_fmu_diff.csv")
+write.csv(human_fmu_diff, "C:/ncstate/NPS/southflorida/viz_summary/human_fmu_diff.csv")
+write.csv(rx_fmu_diff, "C:/ncstate/NPS/southflorida/viz_summary/rx_fmu_diff.csv")
+ names(fmusdt)
 
 
 #Pine rocklands bubble
@@ -206,11 +214,11 @@ pr_bubble<-ggplot(pr, aes(y=CalendarYear)) +
         legend.text = element_text(colour="gray98"),
         axis.ticks.x = element_line(colour='gray98')) +
   
-  geom_point(aes(size = ControlAcres*2, x = plot_date, color = "#0a9900", group=CalendarYear, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass)), alpha=0.5) +
-  scale_color_manual(values=parkpal) +
+  geom_point(aes(size = ControlAcres*2, x = plot_date, group=CalendarYear, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass)),
+             color = "#03c700", alpha=0.5) +
   guides(colour = guide_legend(override.aes = list(size=10)))
 
-ggplotly(p, tooltip='text')
+ggplotly(pr_bubble, tooltip='text')
 
 ##Look at natral outs to figure out how reporting as changed
 #Filter 21-26
@@ -218,7 +226,7 @@ nos<-firesdt[FireTypePr >= 21 & FireTypePr <= 26,,]
 
 
 #Make bubble chart of natural outs
-parkpal<-c("#0a9900", "#00007a")
+parkpal<-c("#0050d1", "#0a9900")
 n <- highlight_key(nos, ~ReportingUnitName)
 p<-ggplot(n, aes(y=CalendarYear)) +
   geom_hline(yintercept = seq(1971, 2018, by = 1), color = "gray", size = 0.04) +
@@ -239,11 +247,21 @@ p<-ggplot(n, aes(y=CalendarYear)) +
         legend.text = element_text(colour="gray98"),
         axis.ticks.x = element_line(colour='gray98')) +
   
-  geom_point(aes(size = ControlAcres*2, x = plot_date, color = ReportingUnitName, group=CalendarYear, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass)), alpha=0.5) +
+  geom_point(aes(size = ControlAcres*3, x = plot_date, color = ReportingUnitName, group=CalendarYear, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass)), alpha=0.75) +
   scale_color_manual(values=parkpal) +
   guides(colour = guide_legend(override.aes = list(size=10)))
 
-ggplotly(p, tooltip='text')
+ggplotly(p, tooltip='text') %>% hide_legend()
+
+
+
+
+
+
+##OLD ANALYSIS BELOW
+
+
+
 
 #Make base chart, all fires, colored by Cause
 
