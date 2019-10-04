@@ -397,7 +397,7 @@ c3<-ggplot(justcost, aes(y=CalendarYear)) +
         legend.title = element_blank(),
         legend.text = element_text(colour="gray98"),
         axis.ticks.x = element_line(colour='gray98')) +
-  geom_point(aes(size = ControlAcres^(1/2), x = plot_date, color = cost, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass)), alpha=0.5) +
+  geom_point(aes(size = ControlAcres^(1/2), x = plot_date, color = cost, text=paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass, "<br> Cost:", dollar(cost))), alpha=0.5) +
   scale_color_gradientn(colors=rev(heat.colors(5))) +
   guides(colour = guide_legend(override.aes = list(size=10)))
 c3g<-ggplotly(c3, tooltip="text")
