@@ -35,7 +35,7 @@ _ncinglis@ncsu.edu_
 &nbsp;
 &nbsp;
   
-##Explore the history of fire in Big Cypress National Preserve and Everglades National Park  
+## Explore the history of fire in Big Cypress National Preserve and Everglades National Park  
 
 _On the charts below, click on fires of each type (human-caused wildfires, natural wildires, prescribed burns and mutual aid responses) to highlight historical trends and patterns on annual and monthly temporal scales. Click the legend labels to toggle fire types on and off._
 
@@ -76,8 +76,9 @@ library(gridExtra)
 library(RColorBrewer)
 
 #Read in WFMI 
-fires <-read.csv("data/all_data_fmus.csv", stringsAsFactors = F)
+fires <-read.csv("C:/ncstate/715/finalproject/nps-fire-viz-project/data/all_data_fmus.csv", stringsAsFactors = F)
 
+fires$StartDate
 
 #Calculate NEWCAT 
 fires$NEWCAT<-case_when(fires$FireTypePr == 48 ~ "Prescribed Fire",
@@ -87,17 +88,23 @@ fires$NEWCAT<-case_when(fires$FireTypePr == 48 ~ "Prescribed Fire",
 
 fires<-fires[fires$NEWCAT !='other',]
 
+
 fires$StartDate<-as.character(fires$StartDate)
-fires$ContrDate<-as.character(fires$ControlDate)
+fires$ContrDate<-as.character(fires$ContrDate)
 fires$StartDate<-as.Date(fires$StartDate, format="%Y-%m-%d", origin="1970-01-01")
 fires$ContrDate<-as.Date(fires$ContrDate, format="%Y-%m-%d", origin="1970-01-01")
 
 fires$duration<-difftime(fires$ContrDate, fires$StartDate, units="days")
 
 #Add plotting date (maintain month and day, static year (2017))
-fires$plot_date<-as.Date(fires$StartDate, format = "%Y%m%d")
+fires$plot_date<-as.Date(fires$StartDate, format = "%Y-%m-%d")
 fires$plot_date<-as.Date(format(fires$plot_date,"2017-%m-%d"))
+
+#Bin by week 
 fires$week <- floor_date(fires$plot_date, "week")
+
+
+
 ```
 
 ```{r first, echo=F, warning=F, message=F, out.width="100%", fig.height=10}
@@ -237,7 +244,7 @@ subplot(pg %>% layout(showlegend=T),
 &nbsp;
 &nbsp;
 
-##How much do fires cost to manage? 
+## How much do fires cost to manage? 
 _Annual costs for both wildfire supression and prescribed fires were obtained from WBS records. Here's how the annual numbers have changed over the past 5 years_
 
 &nbsp;
@@ -433,11 +440,11 @@ c3g
 
 
 
-#Explore the spatial nature of Everglades and Big Cypress fires
+# Explore the spatial nature of Everglades and Big Cypress fires
 _The chart on the left is the same as the one at the top of this page, with one difference. Highlighting on this chart will highlight the corresponding mark on the map on the right, showing where the fire occured. First, select a color with the brush tool located above the map. Then, select a time period of fires on the left. Choose a new color to highlight multiple periods of interest. _ 
 
-```{r mapbox, echo=F, warning=F, message=F, out.width="100%", fig.height=16}
-Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1Ijoibmlra2lpIiwiYSI6ImNqdWxhcHJqMTB1eXk0ZG80dDR2NjVkZnMifQ.jCTe3UM5cUDd67MWTlAp1A')
+```{r mapbox, echo=F, warning=F, message=F, out.width="100%", fig.height=24}
+Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1Ijoibmlra2lpIiwiYSI6ImNrNDdjMHVrNjB0am4za25uMnpmaDQ4dWsifQ.Y8FjR-KmYKCabgdcYyfWAg')
 firesb<-fires[fires$FireName != "LOGGERHEAD" & fires$FireName!= "CRACKUP #1" & fires$FireName!= "ROBERTS" & fires$FireName != "GUM SLGH 1" & fires$FireName != "BLOCKSDOF" & fires$FireName != "ROG NE",]
 share<-SharedData$new(firesb)
 
@@ -470,8 +477,8 @@ names(comp)<-c("1", "2", "3", "4")
 ppg<-ggplotly(pp, tooltip='text')
 
 bscols(ppg %>% highlight("plotly_selected", persistent=T) %>% hide_legend(),
-  plot_mapbox(share, x=~LongitudeDD, y=~LatitudeDD, color=~NEWCAT, colors=pal,
-                 alpha=0.7, size=~(ControlAcres^(1/2)), mode="scattermapbox", text=~paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass), hoverinfo="text") %>% layout(plot_bgcolor = '#333333', paper_bgcolor = '#333333', mapbox = list(style = 'dark', zoom=7, center =list(lat =25.683891,lon = -80.872782))) %>% highlight(dynamic = TRUE, persistent=T, color=comp),  widths=c(6,6))
+       plot_mapbox(share, x=~LongitudeDD, y=~LatitudeDD, color=~NEWCAT, colors=pal,
+                   alpha=0.7, size=~(ControlAcres^(1/2)), mode="scattermapbox", text=~paste('Name:', FireName, '<br>Park:', ReportingUnitName, '<br>Type:', NEWCAT, '<br>Date:', format(StartDate, "%b %d %Y"), '<br>Duration:', duration, "days", '<br>WFU?:', ifelse(FireTypePr==14 | FireTypePr==49, "Yes", "No"), "<br>Size class:", SizeClass), hoverinfo="text") %>% layout(plot_bgcolor = '#333333', paper_bgcolor = '#333333', mapbox = list(style = 'dark', zoom=7, center =list(lat =25.683891,lon = -80.872782))) %>% highlight(dynamic = TRUE, persistent=T, color=comp),  widths=c(12))
   
 ```
 
